@@ -79,7 +79,7 @@ func lineSegments(cgPaths: [CGPath]) -> [LineSegment] {
 		var origin: CGPoint?
 		var lastPoint: CGPoint?
 
-		return cgPath.pathElements.flatMap { (pathElement) -> LineSegment? in
+		return cgPath.pathElements.compactMap { (pathElement) -> LineSegment? in
 			switch pathElement {
 			case .moveTo(let p1):
 				origin = p1
@@ -114,8 +114,8 @@ func lineSegments(cgPaths: [CGPath]) -> [LineSegment] {
 }
 
 let device = MTLCreateSystemDefaultDevice()!
-let commandQueue = device.makeCommandQueue()
-let commandBuffer = commandQueue.makeCommandBuffer()
+let commandQueue = device.makeCommandQueue()!
+let commandBuffer = commandQueue.makeCommandBuffer()!
 
 
 let shaderSource = try! String(contentsOf: #fileLiteral(resourceName: "BezierShaders.metal"))
@@ -147,10 +147,10 @@ func computeBezierCurve(cgPaths: [CGPath]) -> [CGPoint] {
 	let vertexBufferSize = MemoryLayout<BezierPathElement>.size
 	let vertexBuffer = device.makeBuffer(length: vertexBufferSize, options: [.storageModeShared])
 
-	let encoder = commandBuffer.makeComputeCommandEncoder()
+	let encoder = commandBuffer.makeComputeCommandEncoder()!
 	encoder.setComputePipelineState(computePipelineState)
-	encoder.setBuffer(elementsBuffer, offset: 0, at: 0)
-	encoder.setBuffer(vertexBuffer, offset: 0, at: 1)
+	encoder.setBuffer(elementsBuffer, offset: 0, index: 0)
+	encoder.setBuffer(vertexBuffer, offset: 0, index: 1)
 	let threadgroupsPerGrid = MTLSizeMake(elements.count, 1, 1)
 	let threadsPerThreadgroup = MTLSizeMake(1, 1, 1)
 	encoder.dispatchThreadgroups(threadgroupsPerGrid, threadsPerThreadgroup: threadsPerThreadgroup)
@@ -158,7 +158,7 @@ func computeBezierCurve(cgPaths: [CGPath]) -> [CGPoint] {
 	commandBuffer.commit()
 	commandBuffer.waitUntilCompleted()
 
-	let vertices = UnsafeMutablePointer<Vertex>(OpaquePointer(vertexBuffer.contents()))
+	let vertices = UnsafeMutablePointer<Vertex>(OpaquePointer(vertexBuffer!.contents()))
 	var points = [CGPoint]()
 	for index in 0 ..< vertexCount {
 		let vertex = vertices[index]
@@ -169,7 +169,7 @@ func computeBezierCurve(cgPaths: [CGPath]) -> [CGPoint] {
 }
 
 
-class MyBezierView: NSView, CALayerDelegate {
+class MyBezierView: NSView {
 
 	var box: CGRect { return self.bounds.insetBy(dx: 40, dy: 40) }
 	
@@ -186,17 +186,17 @@ class MyBezierView: NSView, CALayerDelegate {
 	override func layout() {
 		super.layout()
 		self.wantsLayer = true
+		assert(self.layer != nil)
 		self.setNeedsDisplay(self.bounds)
 	}
 
 	override func setNeedsDisplay(_ invalidRect: NSRect) {
 		super.setNeedsDisplay(invalidRect)
-		self.layer?.setNeedsDisplay()
 	}
 
-	func draw(_ layer: CALayer, in context: CGContext) {
-
-		Swift.print("draw:in:")
+	override func draw(_ dirtyRect: NSRect) {
+		super.draw(dirtyRect)
+		guard let context = NSGraphicsContext.current?.cgContext else { return }
 		context.setStrokeColor(NSColor.yellow.cgColor)
 		context.setLineWidth(5)
 		context.addPath(bezierPath)
@@ -218,13 +218,9 @@ class MyBezierView: NSView, CALayerDelegate {
 		context.setLineWidth(1)
 		context.strokePath()
 	}
-
-	override func draw(_ dirtyRect: NSRect) {
-		super.draw(dirtyRect)
-	}
 }
 
 
 let bezierView = MyBezierView(frame: CGRect(0, 0, 300, 300))
-
+PlaygroundPage.current.needsIndefiniteExecution = true
 PlaygroundPage.current.liveView = bezierView

@@ -110,19 +110,23 @@ public struct Point: Hashable {
 		return lhs.x == rhs.y && lhs.y == rhs.y
 	}
 	
+	public func hash(into hasher: inout Hasher) {
+		hasher.combine(x)
+		hasher.combine(y)
+	}
 }
 
 public extension Point {
 
-	public init<X: FloatCovertible, Y: FloatCovertible>(_ x: X, _ y: Y) {
+	init<X: FloatCovertible, Y: FloatCovertible>(_ x: X, _ y: Y) {
 		self.x = x.floatValue
 		self.y = y.floatValue
 	}
-	public init<X: FloatCovertible, Y: FloatCovertible>(x: X, y: Y) {
+	init<X: FloatCovertible, Y: FloatCovertible>(x: X, y: Y) {
 		self.x = x.floatValue
 		self.y = y.floatValue
 	}
-	public init(_ point: CGPoint) {
+	init(_ point: CGPoint) {
 		self.x = Float(point.x)
 		self.y = Float(point.y)
 	}
@@ -203,43 +207,43 @@ extension CGPoint: PointConvertible {
 
 public extension CGPoint {
 
-	public init(_ point: Point) {
+	init(_ point: Point) {
 		self.init(x: CGFloat(point.x), y: CGFloat(point.y))
 	}
 
-	public static func - (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
+	static func - (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
 		return CGPoint(x: lhs.x - rhs.x, y: lhs.y - rhs.y)
 	}
 
-	public static func + (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
+	static func + (lhs: CGPoint, rhs: CGPoint) -> CGPoint {
 		return CGPoint(x: lhs.x + rhs.x, y: lhs.y + rhs.y)
 	}
 
-	public static func * (lhs: CGPoint, rhs: CGFloat) -> CGPoint {
+	static func * (lhs: CGPoint, rhs: CGFloat) -> CGPoint {
 		return CGPoint(x: lhs.x * rhs, y: lhs.y * rhs)
 	}
 
-	public static func / (lhs: CGPoint, rhs: CGFloat) -> CGPoint {
+	static func / (lhs: CGPoint, rhs: CGFloat) -> CGPoint {
 		return CGPoint(x: lhs.x / rhs, y: lhs.y / rhs)
 	}
 	
-	public static func • (lhs: CGPoint, rhs: CGPoint) -> CGFloat { // dot product
+	static func • (lhs: CGPoint, rhs: CGPoint) -> CGFloat { // dot product
 		return lhs.x * rhs.x + lhs.y * rhs.y
 	}
 
-	public static func × (lhs: CGPoint, rhs: CGPoint) -> CGFloat { // cross product
+	static func × (lhs: CGPoint, rhs: CGPoint) -> CGFloat { // cross product
 		return lhs.x * rhs.y - lhs.y * rhs.x
 	}
 	
-	public var length²: CGFloat {
+	var length²: CGFloat {
 		return (x * x) + (y * y)
 	}
 
-	public var length: CGFloat {
+	var length: CGFloat {
 		return sqrt(self.length²)
 	}
 
-	public var normalized: CGPoint {
+	var normalized: CGPoint {
 		let length = self.length
 		return CGPoint(x: x/length, y: y/length)
 	}
@@ -249,8 +253,7 @@ public extension CGPoint {
 extension CGPoint {
 
 	public init<X: CGFloatCovertible, Y: CGFloatCovertible>(_ x: X, _ y: Y) {
-		self.x = x.cgFloatValue
-		self.y = y.cgFloatValue
+		self = CGPoint(x: x.cgFloatValue, y: y.cgFloatValue)
 	}
 
 }
@@ -263,8 +266,7 @@ extension CGSize {
 	}
 
 	public init<W: CGFloatCovertible, H: CGFloatCovertible>(_ width: W, _ height: H) {
-		self.width = width.cgFloatValue
-		self.height = height.cgFloatValue
+		self = CGSize(width: width.cgFloatValue, height: height.cgFloatValue)
 	}
 }
 
@@ -276,8 +278,7 @@ extension CGRect {
 	}
 
 	public init<X: CGFloatCovertible, Y: CGFloatCovertible, W: CGFloatCovertible, H: CGFloatCovertible>(_ x: X, _ y: Y, _ width: W, _ height: H) {
-		self.origin = CGPoint(x, y)
-		self.size = CGSize(width, height)
+		self = CGRect(origin: CGPoint(x, y), size: CGSize(width, height))
 	}
 
 }
